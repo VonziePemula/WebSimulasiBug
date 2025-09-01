@@ -1,8 +1,8 @@
-// backend/server.js
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const P = require("pino");
+const readline = require("readline");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 
 const {
@@ -15,12 +15,11 @@ const {
 const bugs = require("./bugs");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1234;
 
-// rate limiter per target jid (anti spam / abuse)
 const rateLimiter = new RateLimiterMemory({
-  points: 5, // max 5 aksi
-  duration: 60 // per 60 detik
+  points: 5,
+  duration: 60
 });
 
 app.use(cors());
@@ -29,6 +28,20 @@ app.use(express.static(path.join(__dirname, "..", "frontend")));
 
 let sock = null;
 
+// helper untuk input terminal
+function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise(resolve =>
+    rl.question(query, ans => {
+      rl.close();
+      resolve(ans.trim());
+    })
+  );
+}
+
 async function connectBot() {
   const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, "auth"));
   const { version } = await fetchLatestBaileysVersion();
@@ -36,21 +49,15 @@ async function connectBot() {
   sock = makeWASocket({
     version,
     logger: P({ level: "silent" }),
-    printQRInTerminal: false,
+    printQRInTerminal: true, // fallback QR kalau pairing code gagal
     auth: state,
     browser: ["VonzieBot", "Chrome", "1.0.0"]
   });
 
-  // creds
   sock.ev.on("creds.update", saveCreds);
 
-  // connection listener
   sock.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
-
-    if (qr) {
-      console.log("⚡ QR Code muncul, scan di WhatsApp untuk login.");
-    }
+    const { connection, lastDisconnect } = update;
 
     if (connection === "open") {
       console.log("✅ WhatsApp Bot berhasil terhubung!");
@@ -71,22 +78,27 @@ async function connectBot() {
     }
   });
 
-  // kalau belum register, generate pairing code
+  // pairing code otomatis
   try {
     if (!sock?.authState?.creds?.registered && sock.requestPairingCode) {
-      const phoneNumber = process.env.OWNER_NUMBER || null; // isi manual / via env
+      let phoneNumber = process.env.OWNER_NUMBER;
+
+      if (!phoneNumber) {
+        phoneNumber = await askQuestion("Masukkan nomor WhatsApp (contoh 628xxxx): ");
+      }
+
       if (phoneNumber) {
         const code = await sock.requestPairingCode(phoneNumber);
         console.log(`🔑 Pairing Code untuk ${phoneNumber}: ${code}`);
+        console.log("👉 Buka WhatsApp > Linked Devices > Pair with code, lalu masukin kode di atas.");
       } else {
-        console.log("❗ Bot belum terdaftar. Jalankan dengan nomor owner (env OWNER_NUMBER).");
+        console.log("❗ Nomor tidak valid. Restart dan coba lagi.");
       }
     }
   } catch (e) {
-    console.warn("Pairing code gagal dibuat:", e?.message ?? e);
+    console.warn("⚠️ Pairing code gagal dibuat:", e?.message ?? e);
   }
 
-  // pesan masuk
   sock.ev.on("messages.upsert", async ({ messages }) => {
     const msg = messages[0];
     if (!msg) return;
@@ -105,7 +117,6 @@ async function connectBot() {
   });
 }
 
-// wrapper kirim bug
 async function safeSendWrapper(req, res) {
   if (!sock) return res.status(500).json({ success: false, error: "Bot belum connect" });
 
@@ -144,14 +155,12 @@ async function safeSendWrapper(req, res) {
   }
 }
 
-// API
 app.post("/api/send-bug", safeSendWrapper);
 
 app.get("/api/status", (req, res) => {
   return res.json({ connected: !!sock });
 });
 
-// start bot
 connectBot().catch((err) => console.error("Gagal connect bot:", err));
 
 app.listen(PORT, () => console.log(`🚀 Server jalan di http://localhost:${PORT}`));
