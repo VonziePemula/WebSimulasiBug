@@ -15,7 +15,6 @@ const {
 const bugs = require("./bugs");
 
 const app = express();
-const PORT = process.env.PORT || 1234;
 
 const rateLimiter = new RateLimiterMemory({
   points: 5,
@@ -163,4 +162,4 @@ app.get("/api/status", (req, res) => {
 
 connectBot().catch((err) => console.error("Gagal connect bot:", err));
 
-app.listen(PORT, () => console.log(`🚀 Server jalan di http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server jalan di https://web-simulasi-bug.vercel.app`));
