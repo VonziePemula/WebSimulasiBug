@@ -1,0 +1,20 @@
+{
+  "name": "vonzie-bug-sender-safe",
+  "version": "1.0.0",
+  "description": "Vonzie Bug Sender - SAFE dev version (simulation + pairing)",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
+  },
+    "dependencies": {
+"@whiskeysockets/baileys": "github:seiren-primrose/PL-Baileys-Old",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "pino": "^9.0.0",
+    "rate-limiter-flexible": "^2.3.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
