@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vonzie Bug Sender v 26.00 Ultimate Infinity Beast Mode</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ===================== General ===================== */
+body,html{
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  font-family:'Inter',sans-serif;
+  background:#000010;
+  color:#0ff;
+}
+h1{margin:0;text-shadow:0 0 20px #0ff,0 0 40px #f0f;}
+
+/* Glass card */
+.glass-card{
+  backdrop-filter: blur(60px);
+  background: rgba(5,5,10,0.5);
+  border-radius:2rem;
+  padding:1.5rem;
+  box-shadow:0 40px 120px rgba(0,255,255,0.9), 0 0 40px #f0f inset;
+}
+
+/* Buttons */
+.btn-cyber{
+  padding:0.8rem 1.8rem;
+  border-radius:1rem;
+  font-weight:900;
+  color:#fff;
+  cursor:pointer;
+  text-shadow:0 0 6px #fff,0 0 20px #0ff;
+  background: linear-gradient(90deg,#3b82f6,#06b6d4,#f43f5e,#facc15,#3b82f6);
+  background-size:400% 400%;
+  animation:gradientMove 3s linear infinite;
+}
+@keyframes gradientMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Dropdown */
+.dropdown-container{position:relative;width:100%;}
+.dropdown-menu{position:absolute;top:100%;left:0;width:100%;background:rgba(5,5,10,0.95);border-radius:1rem;opacity:0;visibility:hidden;transition:all 0.3s ease-in-out;z-index:50;}
+.dropdown-menu div{cursor:pointer;padding:0.8rem 1rem;font-weight:700;color:#0ff;transition:0.2s;}
+.dropdown-menu div:hover{background:#06b6d4;color:#fff;transform:scale(1.1);}
+
+/* Terminal */
+#terminalLog{
+  background:#000;
+  color:#0ff;
+  font-family:monospace;
+  padding:1rem;
+  height:120px;
+  overflow-y:auto;
+  border-radius:1rem;
+  box-shadow:0 0 40px cyan;
+  font-size:0.75rem;
+}
+
+/* Notifications */
+#notification{
+  position:fixed;
+  top:10px;
+  right:10px;
+  background: rgba(0,255,255,0.2);
+  backdrop-filter: blur(40px);
+  border:2px solid #0ff;
+  border-radius:1rem;
+  padding:1rem 1.5rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  box-shadow:0 0 50px #0ff,0 0 50px #f0f inset;
+  font-weight:700;
+  opacity:0;
+  transition:0.5s;
+}
+#notification.show{opacity:1;}
+#notification img{width:40px;height:40px;border-radius:0.8rem;object-fit:cover;animation:thumbZoom 3s infinite;}
+@keyframes thumbZoom{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* Toggle Music */
+.music-toggle{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#0ff;
+  color:#000;
+  padding:18px;
+  border-radius:50%;
+  box-shadow:0 0 25px #0ff,0 0 25px #f0f inset;
+  cursor:pointer;
+  z-index:1000;
+  transition:transform 0.3s ease;
+}
+.music-toggle.playing{
+  animation: spin 3s linear infinite;
+  background:#f0f;
+  color:#fff;
+  box-shadow:0 0 25px #f0f,0 0 25px #0ff inset;
+}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+/* Particles */
+canvas#particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+
+/* Responsive */
+@media (max-width:768px){
+  h1{font-size:1.2rem;text-align:center;}
+  .glass-card{padding:1rem;}
+  #jid,.btn-cyber,#dropdownBtn{padding:0.6rem 1rem;font-size:0.8rem;}
+  #terminalLog{height:100px;font-size:0.7rem;}
+  #notification{padding:0.6rem 1rem;gap:0.5rem;top:5px;right:5px;}
+  #notification img{width:28px;height:28px;}
+}
+</style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen py-10 gap-6">
+
+<canvas id="particles"></canvas>
+
+<h1 class="text-center font-extrabold text-cyan-400">Vonzie Bug Sender v999999999999999999999999 Ultimate Infinity Beast Mode</h1>
+
+<div class="glass-card w-11/12 max-w-sm flex flex-col gap-3">
+    <img src="https://k.top4top.io/p_3528gs2jm0.png" alt="Thumbnail" class="w-full rounded-xl shadow-lg">
+    <input id="jid" type="text" placeholder="Target WhatsApp jid" class="px-4 py-2 rounded-xl bg-slate-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+    
+    <!-- Dropdown -->
+    <div class="dropdown-container">
+      <button id="dropdownBtn" class="btn-cyber w-full flex justify-between items-center px-4 py-2">
+        <span id="selectedBug">Pilih Bug</span>
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div id="dropdownMenu" class="dropdown-menu rounded-xl shadow-lg">
+        <div data-bug="audioX">Audio X Blank</div>
+        <div data-bug="megaCrash">Mega Crash</div>
+        <div data-bug="loopSpam">Loop Spam</div>
+        <div data-bug="glitchBomb">Glitch Bomb</div>
+        <div data-bug="hyperLoop">Hyper Loop</div>
+        <div data-bug="quantumCrash">Quantum Crash</div>
+        <div data-bug="omegaBlast">Omega Blast</div>
+        <div data-bug="infinityCrash">Infinity Crash</div>
+      </div>
+    </div>
+
+    <button id="sendBugBtn" class="btn-cyber mt-3 w-full">SEND BUG</button>
+
+    <div id="terminalLog">Terminal Log: Ready...</div>
+</div>
+
+<div id="notification">
+    <img src="https://k.top4top.io/p_3528gs2jm0.png" alt="Thumbnail">
+    <span>Bug berhasil dikirim!</span>
+</div>
+
+<!-- Music Toggle -->
+<div class="music-toggle" id="musicToggle">
+  <i class="fas fa-music"></i>
+  <audio id="bgMusic" src="https://files.catbox.moe/a5ncoy.mp3" loop></audio>
+</div>
+
+<audio id="beepAudio" src="https://freesound.org/data/previews/522/522653_6497391-lq.mp3"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+<script>
+// Terminal log
+const terminalLog=document.getElementById('terminalLog');
+function addLog(msg){terminalLog.innerHTML+=`<div>> ${msg}</div>`;terminalLog.scrollTop=terminalLog.scrollHeight;}
+
+// Dropdown
+const dropdownBtn=document.getElementById('dropdownBtn');
+const dropdownMenu=document.getElementById('dropdownMenu');
+const selectedBugSpan=document.getElementById('selectedBug');
+let selectedBug=null;
+dropdownBtn.addEventListener('click',()=>{
+  dropdownMenu.classList.toggle('opacity-0');
+  dropdownMenu.classList.toggle('invisible');
+  dropdownMenu.classList.toggle('opacity-100');
+  dropdownMenu.classList.toggle('visible');
+});
+dropdownMenu.querySelectorAll('div').forEach(item=>{
+  item.addEventListener('click',()=>{
+    selectedBug=item.dataset.bug;
+    selectedBugSpan.textContent=item.textContent;
+    dropdownMenu.classList.add('opacity-0','invisible');
+    dropdownMenu.classList.remove('opacity-100','visible');
+  });
+});
+document.addEventListener('click',function(e){
+  if(!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)){
+    dropdownMenu.classList.remove('opacity-100','visible');
+    dropdownMenu.classList.add('opacity-0','invisible');
+  }
+});
+
+// Send bug
+const jidInput=document.getElementById('jid');
+const sendBtn=document.getElementById('sendBugBtn');
+const beep=document.getElementById('beepAudio');
+const notification=document.getElementById('notification');
+
+sendBtn.addEventListener('click',async ()=>{
+  const jid=jidInput.value.trim();
+  const bug=selectedBug;
+  if(!jid){ alert('Masukkan JID target!'); return; }
+  if(!bug){ alert('Pilih Bug dulu!'); return; }
+
+  addLog(`Mengirim bug "${bug}" ke ${jid}...`);
+  try{
+    const res=await fetch('/api/send-bug',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jid,bug})});
+    const data=await res.json();
+    if(data.success){ showNotification(`Bug "${bug}" berhasil dikirim!`,'https://k.top4top.io/p_3528gs2jm0.png'); addLog(`Bug berhasil dikirim ke ${jid}`);}
+    else{ showNotification(`Gagal mengirim bug!`,'https://k.top4top.io/p_3528gs2jm0.png'); addLog(`Gagal mengirim bug ke ${jid}`);}
+  }catch(err){showNotification(`Error: ${err.message}`,'https://k.top4top.io/p_3528gs2jm0.png');addLog(`Error: ${err.message}`);}
+});
+
+// Notification
+function showNotification(msg,imgUrl){
+  notification.querySelector('span').textContent=msg;
+  notification.querySelector('img').src=imgUrl;
+  notification.classList.add('show');
+  beep.currentTime=0; beep.play();
+  setTimeout(()=>{notification.classList.remove('show');},4500);
+}
+
+// Toggle Music
+const music=document.getElementById("bgMusic");
+const musicBtn=document.getElementById("musicToggle");
+musicBtn.addEventListener("click",()=>{
+  if(music.paused){
+    music.play();
+    musicBtn.classList.add("playing");
+  }else{
+    music.pause();
+    musicBtn.classList.remove("playing");
+  }
+});
+
+// Particles background
+const canvas=document.getElementById('particles');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let particlesArray=[];
+const colors=['#0ff','#06b6d4','#3b82f6','#f43f5e','#facc15','#ff00ff'];
+class Particle{
+  constructor(){
+    this.x=Math.random()*canvas.width;
+    this.y=Math.random()*canvas.height;
+    this.size=Math.random()*3+1;
+    this.speedX=Math.random()*2-1;
+    this.speedY=Math.random()*2-1;
+    this.color=colors[Math.floor(Math.random()*colors.length)];
+  }
+  update(){
+    this.x+=this.speedX;
+    this.y+=this.speedY;
+    if(this.x>canvas.width||this.x<0)this.speedX*=-1;
+    if(this.y>canvas.height||this.y<0)this.speedY*=-1;
+  }
+  draw(){
+    ctx.fillStyle=this.color;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+function initParticles(){particlesArray=[];for(let i=0;i<100;i++){particlesArray.push(new Particle());}}
+function handleParticles(){
+  for(let i=0;i<particlesArray.length;i++){
+    particlesArray[i].update();
+    particlesArray[i].draw();
+    for(let j=i;j<particlesArray.length;j++){
+      const dx=particlesArray[i].x-particlesArray[j].x;
+      const dy=particlesArray[i].y-particlesArray[j].y;
+      const distance=Math.sqrt(dx*dx+dy*dy);
+      if(distance<100){
+        ctx.strokeStyle='rgba(0,255,255,'+(1-distance/100)+')';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(particlesArray[i].x,particlesArray[i].y);
+        ctx.lineTo(particlesArray[j].x,particlesArray[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+function animateParticles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  handleParticles();
+  requestAnimationFrame(animateParticles);
+}
+window.addEventListener('resize',()=>{
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  initParticles();
+});
+initParticles();
+animateParticles();
+</script>
+</body>
+</html>
