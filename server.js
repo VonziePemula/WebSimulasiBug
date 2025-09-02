@@ -1,14 +1,96 @@
 const express = require("express");
-const fs = require("fs");
+const cors = require("cors");
+const path = require("path");
+const pino = require("pino");
+const readline = require("readline");
+const { RateLimiterMemory } = require("rate-limiter-flexible");
+const fetch = require("node-fetch");
+const chalk = require("chalk");
 const crypto = require("crypto");
+
+const {
+  default: makeWASocket,
+  useMultiFileAuthState,
+  DisconnectReason,
+  makeCacheableSignalKeyStore,
+} = require("@whiskeysockets/baileys");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+
 
 app.use(express.json());
 app.use(express.static("public"));
 
 const loadUsers = () => JSON.parse(fs.readFileSync("./users.json", "utf8"));
 const saveUsers = (data) => fs.writeFileSync("./users.json", JSON.stringify(data, null, 2));
+const ElContol = require("./ElContol");
+let sock = null,
+
+// === WhatsApp client connection baru ===
+async function clientStart() {
+  const { state, saveCreds } = await useMultiFileAuthState("session");
+
+  const baileyVersion = await (await fetch('https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Defaults/baileys-version.json')).json();
+
+  sock = makeWASocket({
+    printQRInTerminal: !usePairingCode,
+    syncFullHistory: true,
+    markOnlineOnConnect: true,
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 0,
+    keepAliveIntervalMs: 10000,
+    generateHighQualityLinkPreview: true,
+    patchMessageBeforeSending: (message) => {
+      if (message.buttonsMessage || message.templateMessage || message.listMessage) {
+        message = {
+          viewOnceMessage: {
+            message: {
+              messageContextInfo: {
+                deviceListMetadataVersion: 2,
+                deviceListMetadata: {},
+              },
+              ...message,
+            },
+          },
+        };
+      }
+      return message;
+    },
+    version: baileyVersion.version,
+    browser: ["web-bug-vexebew", "Chrome", "20.0.04"],
+    logger: pino({ level: "fatal" }),
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, pino().child({ level: 'silent', stream: 'store' })),
+    },
+  });
+
+  sock.ev.on("creds.update", saveCreds);
+
+  if (!sock.authState.creds.registered && usePairingCode) {
+    const phoneNumber = await question('Please enter your WhatsApp number (start with 62):\n');
+    const code = await sock.requestPairingCode(phoneNumber.trim());
+    console.log(chalk.blue.bold(`Your pairing code: ${code}`));
+  }
+
+  sock.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+    if (connection === "connecting") return console.log(chalk.yellow("Connecting..."));
+    if (connection === "open") return console.log(chalk.green("✅ WhatsApp Bot connected"));
+
+    if (connection === "close") {
+      const reason = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.message;
+      console.log(chalk.red("Connection closed:", reason));
+
+      if (reason !== DisconnectReason.loggedOut) {
+        console.log(chalk.yellow("Reconnecting..."));
+        setTimeout(clientStart, 3000);
+      } else {
+        console.log(chalk.red("Logged out. Delete session folder for re-pairing."));
+      }
+    }
+  });
 
 app.post("/api/add-user", (req, res) => {
   const { phone, role } = req.body;
@@ -189,4 +271,5 @@ app.post("/api/crash", async (req, res) => {
   }
 });
 
+clientStart().catch(err => console.error("Gagal connect bot:", err));
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
